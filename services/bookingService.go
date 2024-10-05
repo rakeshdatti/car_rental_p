@@ -13,9 +13,7 @@ func NewBookingService(bookingRepo *repositories.BookingRepository) *BookingServ
     return &BookingService{bookingRepo: bookingRepo}
 }
 
-// func (s *BookingService) CreateBooking(booking *models.Booking) error {
-//     return s.bookingRepo.CreateBooking(booking)
-// }
+
 
 func (s *BookingService) CreateBooking(booking *models.Booking) (*models.Booking, error) {
     return s.bookingRepo.CreateBooking(booking)

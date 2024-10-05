@@ -13,10 +13,7 @@ func NewBookingRepository(db *sql.DB) *BookingRepository {
     return &BookingRepository{db: db}
 }
 
-// func (repo *BookingRepository) CreateBooking(booking *models.Booking) error {
-//     _, err := repo.db.Exec("INSERT INTO bookings (user_id, car_id, start, end) VALUES (?, ?, ?, ?)", booking.UserID, booking.CarID, booking.Start, booking.End)
-//     return err
-// }
+
 
 func (repo *BookingRepository) CreateBooking(booking *models.Booking) (*models.Booking, error) {
   

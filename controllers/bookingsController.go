@@ -17,24 +17,7 @@ func NewBookingsController(bookingService *services.BookingService) *BookingsCon
     return &BookingsController{bookingService: bookingService}
 }
 
-// func (ctrl *BookingsController) CreateBooking(c *gin.Context) {
-//     var booking models.Booking
-//     if err := c.ShouldBindJSON(&booking); err != nil {
-//         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-//         return
-//     }
 
-//     // Set the start and end times
-//     now := time.Now()                   // Current time
-//     booking.Start = now                 // Set start time
-//     booking.End = now.Add(24 * time.Hour) // Set end time to 24 hours later
-
-//     if err := ctrl.bookingService.CreateBooking(&booking); err != nil {
-//         c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-//         return
-//     }
-//     c.JSON(http.StatusCreated, booking)
-// }
 func (ctrl *BookingsController) CreateBooking(c *gin.Context) {
     var booking models.Booking
     if err := c.ShouldBindJSON(&booking); err != nil {

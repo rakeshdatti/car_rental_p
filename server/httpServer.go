@@ -37,7 +37,7 @@ func InitHttpServer(config *viper.Viper, dbHandler *sql.DB) HttpServer {
     bookingsController := controllers.NewBookingsController(bookingService)
 
     router := gin.Default()
-   
+   //user routes
     router.POST("/register", authController.Register)
     router.POST("/login", authController.Login)
     router.GET("/cars", carsController.GetAvailableCars)
@@ -45,10 +45,13 @@ func InitHttpServer(config *viper.Viper, dbHandler *sql.DB) HttpServer {
     router.GET("/cars/:model", carsController.GetCarsByModel)
     router.GET("/cars/available",carsController.GetAvailableCars)
 
+
     // Admin routes
     router.POST("/admin/login", authController.AdminLogin)
-    router.POST("/admin/cars", carsController.AddCar) 
-    router.GET("/admin/cars", carsController.GetAllCars) 
+    router.POST("/admin/cars",middlewares.AuthMiddleware(jwtSecret), carsController.AddCar) 
+    router.GET("/admin/cars", middlewares.AuthMiddleware(jwtSecret),carsController.GetAllCars) 
+    router.DELETE("/admin/cars/:model",middlewares.AuthMiddleware(jwtSecret),carsController.DeleteCarByModel)
+    router.PUT("/admin/cars/:id",middlewares.AuthMiddleware(jwtSecret),carsController.UpdateCarID)
     
 
     return HttpServer{

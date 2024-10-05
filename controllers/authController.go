@@ -54,19 +54,18 @@ func (ctrl *AuthController) AdminLogin(c *gin.Context) {
 
 }
 
-func (ac *AuthController) Login(c *gin.Context) {
+func (ctrl *AuthController) Login(c *gin.Context) {
     var loginDetails struct {
         Username string `json:"username"`
         Password string `json:"password"`
     }
 
-    // Bind JSON input to the loginDetails struct
     if err := c.ShouldBindJSON(&loginDetails); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
         return
     }
 
-    token, userID, err := ac.authService.Login(loginDetails.Username, loginDetails.Password)
+    token, userID, err := ctrl.authService.Login(loginDetails.Username, loginDetails.Password)
     if err != nil {
         c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
         return
