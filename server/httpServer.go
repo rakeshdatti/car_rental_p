@@ -1,54 +1,68 @@
+// server/httpServer.go
 package server
 
 import (
-	"database/sql"
-	"log"
-	"runners-mysql/controllers"
-	"runners-mysql/repositories"
-	"runners-mysql/services"
-
-	"github.com/gin-gonic/gin"
-	"github.com/spf13/viper"
+    "database/sql"
+    "log"
+    "os"
+    "runners-mysql/controllers"
+    "runners-mysql/repositories"
+    "runners-mysql/services"
+    "runners-mysql/middlewares" // Ensure this is imported
+    "github.com/gin-gonic/gin"
+    "github.com/spf13/viper"
 )
 
 type HttpServer struct {
-	config            *viper.Viper
-	router            *gin.Engine
-	adminController *controllers.AdminController
-	carController *controllers.CarController
+    config            *viper.Viper
+    router            *gin.Engine
+    authController    *controllers.AuthController
+    carsController    *controllers.CarsController
+    bookingsController *controllers.BookingsController
 }
 
 func InitHttpServer(config *viper.Viper, dbHandler *sql.DB) HttpServer {
-	adminRepository := repositories.NewAdminRepository(dbHandler)
-	carRepository := repositories.NewCarRepository(dbHandler)
-	adminService := services.NewAdminService(adminRepository, carRepository)
-	carService := services.NewCarService(adminRepository, carRepository)
-	adminController := controllers.NewAdminController(adminService)
-	carController := controllers.NewCarController(carService)
+    userRepository := repositories.NewUserRepository(dbHandler)
+    carRepository := repositories.NewCarRepository(dbHandler)
+    bookingRepository := repositories.NewBookingRepository(dbHandler)
 
-	router := gin.Default()
+    jwtSecret := os.Getenv("JWT_SECRET")
+    
+    authService := services.NewAuthService(userRepository, jwtSecret)
+    carService := services.NewCarService(carRepository)
+    bookingService := services.NewBookingService(bookingRepository)
 
-	router.POST("/admin/login", adminController.Login)
-    router.POST("/admin/logout", adminController.Logout)
+    authController := controllers.NewAuthController(authService)
+    carsController := controllers.NewCarsController(carService)
+    bookingsController := controllers.NewBookingsController(bookingService)
 
+    router := gin.Default()
+   
+    router.POST("/register", authController.Register)
+    router.POST("/login", authController.Login)
+    router.GET("/cars", carsController.GetAvailableCars)
+    router.POST("/bookings", middlewares.AuthMiddleware(jwtSecret), bookingsController.CreateBooking)
+    router.GET("/cars/:model", carsController.GetCarsByModel)
+    router.GET("/cars/available",carsController.GetAvailableCars)
 
-	router.GET("/cars", carController.GetAllCars)
-	router.GET("/cars/:id", carController.GetCarByID)
-	router.POST("/cars", carController.CreateCar)
-	router.PUT("/cars/:id", carController.UpdateCar)
-	router.DELETE("/cars/:id", carController.DeleteCar)
+    // Admin routes
+    router.POST("/admin/login", authController.AdminLogin)
+    router.POST("/admin/cars", carsController.AddCar) 
+    router.GET("/admin/cars", carsController.GetAllCars) 
+    
 
-	return HttpServer{
-		config:            config,
-		router:            router,
-		adminController: adminController,
-		carController: carController,
-	}
+    return HttpServer{
+        config:            config,
+        router:            router,
+        authController:    authController,
+        carsController:    carsController,
+        bookingsController: bookingsController,
+    }
 }
 
 func (hs HttpServer) Start() {
-	err := hs.router.Run(hs.config.GetString("http.server_address"))
-	if err != nil {
-		log.Fatalf("Error while starting HTTP server: %v", err)
-	}
+    err := hs.router.Run(hs.config.GetString("http.server_address"))
+    if err != nil {
+        log.Fatalf("Error while starting HTTP server: %v", err)
+    }
 }
